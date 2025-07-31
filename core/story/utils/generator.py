@@ -45,6 +45,40 @@ def generate_story_with_huggingface(theme,characters,moral):
         ],
     )
     # another model="mistralai/Mistral-7B-Instruct-v0.2:featherless-ai",
+    # google gemma model="google/gemma-2-2b-it:nebius",
+
+    print(response.choices[0].message)
+    res = response.choices[0].message.content.strip()
+    return res
+
+def generate_revise_story_with_huggingface(original_story,instruction):
+    #prompt = f"Revise this story given here - {original_story} ,by adding the following instructions {instructions} and give a new revised story."
+    prompt = f"""
+        Here's a children's story:
+        ---
+        {original_story}
+        ---
+        Please revise this story with the following instruction:
+        "{instruction}"
+
+        Give me the new version only.
+        """
+    client = OpenAI(
+        base_url="https://router.huggingface.co/v1",
+        api_key=settings.HUGGINGFACE_API_KEY,
+    )
+
+    response = client.chat.completions.create(
+        model="moonshotai/Kimi-K2-Instruct:novita",
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+    )
+    # another model="mistralai/Mistral-7B-Instruct-v0.2:featherless-ai",
+    # google gemma model="google/gemma-2-2b-it:nebius",
 
     print(response.choices[0].message)
     res = response.choices[0].message.content.strip()

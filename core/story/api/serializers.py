@@ -1,6 +1,6 @@
 """ Serializer for story generation """
 from rest_framework import serializers
-from story.models import Story
+from story.models import Story,StoryRevision
 
 class StoryRequestSerializer(serializers.Serializer):
     theme = serializers.CharField(max_length=100)
@@ -11,3 +11,11 @@ class StoryResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Story
         fields = ['id','theme','characters','moral','content','created_at']
+
+class StoryReviseRequestSerializer(serializers.Serializer):
+    instruction = serializers.CharField(max_length=300)
+
+class StoryRevisionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StoryRevision
+        fields = ['id','story','instruction','revised_content','created_at']
