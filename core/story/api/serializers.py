@@ -18,4 +18,4 @@ class StoryReviseRequestSerializer(serializers.Serializer):
 class StoryRevisionSerializer(serializers.ModelSerializer):
     class Meta:
         model = StoryRevision
-        fields = ['id','story','instruction','revised_content','created_at']
+        fields = ['id','story','instruction','revised_content','created_at','revision_applied']

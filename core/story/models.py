@@ -20,8 +20,8 @@ class StoryRevision(models.Model):
     instruction = models.CharField(max_length=200)
     revised_content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    revision_applied = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Revision of {self.story.id}, created at {self.created_at}"
-    
     

@@ -57,3 +57,27 @@ class StoryReviseView(APIView):
             response_serializer = StoryRevisionSerializer(revise_story_obj)
             return Response(response_serializer.data)
 
+class ApplyStoryRevisionView(APIView):
+    """ endpoint to apply a particular revision to the main story """
+
+    def post(self,request,revision_id):
+        """make the revised_content of the revision main story content """
+        revision_obj = StoryRevision.objects.select_related('story').filter(id=revision_id).first()
+        if revision_obj is None:
+            return Response(data = {"message":"REvison not found"},status=status.HTTP_400_BAD_REQUEST)
+        revision_obj.story.content = revision_obj.revised_content
+        revision_obj.story.save()
+
+        revision_obj.revision_applied = True
+        revision_obj.save()
+
+        return Response(data={
+                    "message":"Revision applied succesfully",
+                    "updated_story":{
+                        "id" : revision_obj.story.id,
+                        "theme": revision_obj.story.theme,
+                        "characters" : revision_obj.story.characters,
+                        "moral": revision_obj.story.moral,
+                        "content" : revision_obj.story.content,
+                    }
+        },status=status.HTTP_200_OK)
