@@ -10,7 +10,7 @@ class StoryRequestSerializer(serializers.Serializer):
 class StoryResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Story
-        fields = ['id','theme','characters','moral','content','created_at']
+        fields = '__all__' #['id','theme','characters','moral','content','created_at']
 
 class StoryReviseRequestSerializer(serializers.Serializer):
     instruction = serializers.CharField(max_length=300)
@@ -18,4 +18,4 @@ class StoryReviseRequestSerializer(serializers.Serializer):
 class StoryRevisionSerializer(serializers.ModelSerializer):
     class Meta:
         model = StoryRevision
-        fields = ['id','story','instruction','revised_content','created_at','revision_applied']
+        fields = '__all__' #['id','story','instruction','revised_content','created_at','revision_applied']

@@ -2,6 +2,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework import permissions
 
 from story.models import Story,StoryRevision
 from .serializers import StoryRequestSerializer,StoryResponseSerializer,StoryRevisionSerializer,StoryReviseRequestSerializer
@@ -11,6 +12,8 @@ from django.shortcuts import get_object_or_404
 
 class StoryGeneratorView(APIView):
     """ view to generate the story """
+    permission_classes = [permissions.IsAuthenticated]
+
 
     def get(self,request):
         pass
@@ -26,7 +29,7 @@ class StoryGeneratorView(APIView):
             story_text = generate_story_with_huggingface(theme,characters,moral)
 
             story_obj = Story.objects.create(theme=theme,characters=characters,
-                                             moral=moral,content=story_text)
+                                             moral=moral,content=story_text,user=request.user)
             response_serializer = StoryResponseSerializer(story_obj)
             return Response(response_serializer.data)
         
@@ -34,10 +37,11 @@ class StoryGeneratorView(APIView):
 
 class StoryReviseView(APIView):
     """ view to update the story by giving further instruction to ai """
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self,request,id):
         """ get all the revisions of the story """
-        revisions = StoryRevision.objects.filter(story__id = id).order_by('created_at')
+        revisions = StoryRevision.objects.filter(story__id = id,story__user=request.user).order_by('created_at')
         serializer = StoryRevisionSerializer(revisions, many=True)
         return Response(serializer.data)
 
@@ -59,10 +63,11 @@ class StoryReviseView(APIView):
 
 class ApplyStoryRevisionView(APIView):
     """ endpoint to apply a particular revision to the main story """
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self,request,revision_id):
         """make the revised_content of the revision main story content """
-        revision_obj = StoryRevision.objects.select_related('story').filter(id=revision_id).first()
+        revision_obj = StoryRevision.objects.select_related('story').filter(id=revision_id,story__user=request.user).first()
         if revision_obj is None:
             return Response(data = {"message":"REvison not found"},status=status.HTTP_400_BAD_REQUEST)
         revision_obj.story.content = revision_obj.revised_content
@@ -79,5 +84,6 @@ class ApplyStoryRevisionView(APIView):
                         "characters" : revision_obj.story.characters,
                         "moral": revision_obj.story.moral,
                         "content" : revision_obj.story.content,
+                        "user":revision_obj.story.user,
                     }
         },status=status.HTTP_200_OK)
