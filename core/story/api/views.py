@@ -5,15 +5,20 @@ from rest_framework import status
 from rest_framework import permissions
 
 from story.models import Story,StoryRevision
-from .serializers import StoryRequestSerializer,StoryResponseSerializer,StoryRevisionSerializer,StoryReviseRequestSerializer
+from .serializers import StoryRequestSerializer,StoryResponseSerializer,StoryRevisionSerializer,StoryReviseRequestSerializer,ApplyRevisionResponseSerializer
 from story.utils.generator import generate_story_with_huggingface,generate_revise_story_with_huggingface
 
 from django.shortcuts import get_object_or_404
 
+from drf_spectacular.utils import extend_schema
+
+@extend_schema(
+    request=StoryRequestSerializer,
+    responses=StoryResponseSerializer
+)
 class StoryGeneratorView(APIView):
     """ view to generate the story """
     permission_classes = [permissions.IsAuthenticated]
-
 
     def get(self,request):
         pass
@@ -35,6 +40,10 @@ class StoryGeneratorView(APIView):
         
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
+@extend_schema(
+    request=StoryReviseRequestSerializer,
+    responses=StoryRevisionSerializer
+)
 class StoryReviseView(APIView):
     """ view to update the story by giving further instruction to ai """
     permission_classes = [permissions.IsAuthenticated]
@@ -61,6 +70,10 @@ class StoryReviseView(APIView):
             response_serializer = StoryRevisionSerializer(revise_story_obj)
             return Response(response_serializer.data)
 
+@extend_schema(
+    request=None,
+    responses=ApplyRevisionResponseSerializer
+)
 class ApplyStoryRevisionView(APIView):
     """ endpoint to apply a particular revision to the main story """
     permission_classes = [permissions.IsAuthenticated]

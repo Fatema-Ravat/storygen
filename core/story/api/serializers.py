@@ -19,3 +19,7 @@ class StoryRevisionSerializer(serializers.ModelSerializer):
     class Meta:
         model = StoryRevision
         fields = '__all__' #['id','story','instruction','revised_content','created_at','revision_applied']
+
+class ApplyRevisionResponseSerializer(serializers.Serializer):
+    message = serializers.CharField()
+    updated_story = serializers.DictField()

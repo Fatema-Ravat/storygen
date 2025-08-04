@@ -10,6 +10,9 @@ djangorestframework-simplejwt>=5.3.0
 #django-allauth>=0.54.0
 djoser>=2.2.0
 
+#for api testing and documentation
+drf-spectacular>=0.27.1
+
 # Environment variable support
 python-dotenv>=1.0.1
 
