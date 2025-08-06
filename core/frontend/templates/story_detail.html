@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Story Details{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-6 rounded shadow">
+    <h2 class="text-xl font-semibold mb-4">Story</h2>
+    <div id="story-content" class="whitespace-pre-wrap"></div>
+    
+    <div class="mt-6 flex gap-4">
+        <a href="/story/{{ story_id }}/revisions/" class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600">
+            📝 View Revisions
+            </a>
+        <a href="/story/{{ story_id }}/revise/" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">
+            ✏️ Revise Story
+        </a>
+    </div>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", async function() {
+    const token = localStorage.getItem("access_token");
+    const res = await fetch(`/api/story/{{ story_id }}/`, {
+        headers: {
+            "Authorization": `Bearer ${token}`
+        }
+    });
+    const data = await res.json();
+    document.getElementById("story-content").innerText = data.content || "No content found.";
+});
+</script>
+{% endblock %}

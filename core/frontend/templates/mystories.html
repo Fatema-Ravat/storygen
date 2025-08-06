@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}My Stories{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto bg-white p-6 rounded shadow">
+    <h2 class="text-xl font-semibold mb-4">My Stories</h2>
+    <ul id="story-list" class="space-y-4"></ul>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", async function(){
+
+    const token = localStorage.getItem("access_token");
+    const res = await fetch("/api/stories/", {
+        headers: { "Authorization": `Bearer ${token}` }
+    });
+    const stories = await res.json();
+    const container = document.getElementById("story-list");
+
+    if (stories.length === 0) {
+        container.innerHTML = "<li>No stories found.</li>";
+        return;
+    }
+
+    stories.forEach(story => {
+        const item = document.createElement("li");
+        item.classList.add("bg-gray-100", "p-4", "rounded");
+        item.innerHTML = `
+            <h3 class="text-lg font-bold">${story.theme}</h3>
+            <p><strong>Characters:</strong> ${story.characters}</p>
+            <p><strong>Moral:</strong> ${story.moral}</p>
+            <a href="/story/${story.id}/" class="text-indigo-600 hover:underline">Read</a> |
+            <a href="/story/${story.id}/revisions/" class="text-indigo-600 hover:underline">Revisions</a>
+        `;
+        container.appendChild(item);
+    });
+});
+</script>
+{% endblock %}

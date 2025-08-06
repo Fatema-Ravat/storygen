@@ -20,9 +20,6 @@ class StoryGeneratorView(APIView):
     """ view to generate the story """
     permission_classes = [permissions.IsAuthenticated]
 
-    def get(self,request):
-        pass
-
     def post(self,request):
         serializer = StoryRequestSerializer(data=request.data)
         if serializer.is_valid():
@@ -41,6 +38,38 @@ class StoryGeneratorView(APIView):
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
 @extend_schema(
+    request=None,
+    responses = StoryResponseSerializer
+)
+class StoryDetailView(APIView):
+    """ detail view of story object """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self,request,id):
+        """ Get the detail of the given id """
+        story_obj = get_object_or_404(Story,id=id)
+        response_serializer = StoryResponseSerializer(story_obj)
+        return Response(response_serializer.data)
+
+
+@extend_schema(
+    request=None,
+    responses = StoryResponseSerializer
+)
+class StoryListView(APIView):
+    """ detail view of story object """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self,request):
+        """ Get the list of all the stories by an user. """
+        print("in get request")
+        stories = Story.objects.filter(user=request.user).order_by('-created_at')
+        print(stories)
+        response_serializer = StoryResponseSerializer(stories, many=True)
+        return Response(response_serializer.data)
+    
+
+@extend_schema(
     request=StoryReviseRequestSerializer,
     responses=StoryRevisionSerializer
 )
@@ -50,7 +79,7 @@ class StoryReviseView(APIView):
 
     def get(self,request,id):
         """ get all the revisions of the story """
-        revisions = StoryRevision.objects.filter(story__id = id,story__user=request.user).order_by('created_at')
+        revisions = StoryRevision.objects.filter(story__id = id,story__user=request.user).order_by('-created_at')
         serializer = StoryRevisionSerializer(revisions, many=True)
         return Response(serializer.data)
 
@@ -89,6 +118,8 @@ class ApplyStoryRevisionView(APIView):
         revision_obj.revision_applied = True
         revision_obj.save()
 
+        other_revisions = StoryRevision.objects.exclude(id=revision_obj.id).update(revision_applied=False)
+
         return Response(data={
                     "message":"Revision applied succesfully",
                     "updated_story":{
@@ -97,6 +128,5 @@ class ApplyStoryRevisionView(APIView):
                         "characters" : revision_obj.story.characters,
                         "moral": revision_obj.story.moral,
                         "content" : revision_obj.story.content,
-                        "user":revision_obj.story.user,
                     }
         },status=status.HTTP_200_OK)

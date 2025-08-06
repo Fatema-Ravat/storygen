@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Revise Story{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-6 rounded shadow">
+    <h2 class="text-xl font-semibold mb-4">Revise Story</h2>
+    <form id="revise-form" class="space-y-4">
+        <textarea name="instruction" rows="4" placeholder="Describe how you'd like to change the story" class="w-full p-2 border rounded" required></textarea>
+        <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded">Submit Revision</button>
+    </form>
+    <div id="revision-output" class="mt-6 hidden bg-gray-100 p-4 rounded"></div>
+
+     <!-- Loading Overlay -->
+    <div id="loading-overlay"
+        class="absolute inset-0 bg-white bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-10 hidden">
+        <div class="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+</div>
+
+<script>
+document.getElementById("revise-form").onsubmit = async function(e) {
+    e.preventDefault();
+    const token = localStorage.getItem("access_token");
+    const overlay = document.getElementById("loading-overlay");
+    const output = document.getElementById("revision-output");
+
+    // Show overlay and block interactions
+    overlay.classList.remove("hidden");
+    output.classList.add("hidden");
+
+    try{
+        const res = await fetch(`/api/story/{{ story_id }}/revise/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                instruction: e.target.instruction.value
+            })
+        });
+
+        const data = await res.json();
+        console.log(data)
+        output.innerHTML = `
+        <h3 class="text-lg font-semibold mb-2">Generated Story:</h3>
+        <pre class="whitespace-pre-wrap mb-4">${data.revised_content || "No story generated."}</pre>
+        ${data.id ? `<a href="/story/{{story_id}}/revisions" class="text-indigo-600 hover:underline">➡️ View Revisions</a>` : ""}
+        `;
+        output.classList.remove("hidden");
+
+    }catch (error) {
+        output.innerHTML = `<p class="text-red-600">Something went wrong. Please try again.</p>`;
+    }
+    // Hide overlay and show result
+    overlay.classList.add("hidden");
+    output.classList.remove("hidden");
+    
+}
+</script>
+{% endblock %}

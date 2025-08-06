@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Story Revisions{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto bg-white p-6 rounded shadow">
+    <h2 class="text-xl font-semibold mb-4">Revisions for Story #{{ story_id }}</h2>
+    <ul id="revisions-list" class="space-y-4"></ul>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", async function() {
+    const token = localStorage.getItem("access_token");
+    const res = await fetch(`/api/story/{{ story_id }}/revise/`, {
+        headers: { "Authorization": `Bearer ${token}` }
+    });
+    const data = await res.json();
+    const container = document.getElementById("revisions-list");
+
+    if (data.length === 0) {
+        container.innerHTML = "<li>No revisions found.</li>";
+        return;
+    }
+
+    data.forEach(revision => {
+        const item = document.createElement("li");
+        item.classList.add("bg-gray-100", "p-4", "rounded");
+        item.innerHTML = `
+            <p><strong>Instruction:</strong> ${revision.instruction}</p>
+            <p><strong>Revised Content:</strong></p>
+            <pre class="whitespace-pre-wrap">${revision.revised_content}</pre>
+            ${revision.revision_applied ? 
+                '<p class="text-green-600 mt-2">Applied</p>' : 
+                `<button class="bg-indigo-600 text-white px-4 py-1 mt-2 rounded apply-btn" data-id="${revision.id}">Apply</button>`}
+        `;
+        container.appendChild(item);
+    });
+
+    container.addEventListener("click", async function(e) {
+        if (e.target.classList.contains("apply-btn")) {
+            const revisionId = e.target.dataset.id;
+            const applyRes = await fetch(`/api/revisions/${revisionId}/apply/`, {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            const result = await applyRes.json();
+            alert(result.message || "Revision applied.");
+            window.location.reload();
+        }
+    });
+});
+</script>
+{% endblock %}

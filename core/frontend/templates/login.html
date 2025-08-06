@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto bg-white p-6 rounded shadow">
+    <h2 class="text-xl font-semibold mb-4">Login</h2>
+    <form id="login-form" class="space-y-4">
+        <input type="text" name="username" placeholder="Username" class="w-full p-2 border rounded" required>
+        <input type="password" name="password" placeholder="Password" class="w-full p-2 border rounded" required>
+        <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded">Login</button>
+    </form>
+    <p id="error" class="text-red-600 mt-2"></p>
+</div>
+
+<script>
+document.getElementById("login-form").onsubmit = async function(e) {
+  e.preventDefault();
+  const res = await fetch("/api/auth/jwt/create/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      username: e.target.username.value,
+      password: e.target.password.value
+    })
+  });
+  const data = await res.json();
+  if (data.access) {
+    localStorage.setItem("access_token", data.access);
+    window.location.href = "/generate/";
+  } else {
+    document.getElementById("error").innerText = "Login failed";
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Register - TinyLabs.ai{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto bg-white p-6 rounded shadow mt-10">
+  <h2 class="text-2xl font-semibold mb-4 text-center text-indigo-700">Create Your Account</h2>
+
+  <form id="register-form" class="space-y-4">
+    <input type="text" name="username" placeholder="Username" class="w-full p-2 border rounded" required>
+    <input type="email" name="email" placeholder="Email" class="w-full p-2 border rounded" required>
+    <input type="password" name="password" placeholder="Password" class="w-full p-2 border rounded" required>
+    <input type="password" name="password2" placeholder="Confirm Password" class="w-full p-2 border rounded" required>
+
+    <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700">Register</button>
+    <p id="error-msg" class="text-red-600 text-sm mt-2"></p>
+    <p class="text-sm text-gray-600 mt-4 text-center">Already have an account? <a href="/login/" class="text-indigo-600 hover:underline">Login</a></p>
+  </form>
+</div>
+
+<script>
+document.getElementById("register-form").onsubmit = async function(e) {
+  e.preventDefault();
+  const username = e.target.username.value;
+  const email = e.target.email.value;
+  const password = e.target.password.value;
+  const password2 = e.target.password2.value;
+  const errorMsg = document.getElementById("error-msg");
+
+  if (password !== password2) {
+    errorMsg.textContent = "Passwords do not match.";
+    return;
+  }
+
+  const res = await fetch("/api/auth/users/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, email, password })
+  });
+
+  const data = await res.json();
+
+  if (res.status === 201) {
+    window.location.href = "/login/";
+  } else {
+    errorMsg.textContent = data.email?.[0] || data.username?.[0] || "Registration failed.";
+  }
+};
+</script>
+{% endblock %}
