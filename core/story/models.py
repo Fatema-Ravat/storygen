@@ -28,3 +28,15 @@ class StoryRevision(models.Model):
     def __str__(self):
         return f"Revision of {self.story.id}, created at {self.created_at}"
     
+def story_image_upload_path(instance, filename):
+    return f"story_images/story_{instance.story.id}/{filename}"
+
+class StoryImage(models.Model):
+    story = models.ForeignKey(Story, on_delete=models.CASCADE, related_name="images")
+    prompt = models.TextField()
+    image = models.ImageField(upload_to=story_image_upload_path)
+    style = models.CharField(max_length=50, default="default")  # e.g., cartoon, realistic, etc.
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Image for Story #{self.story.id} – {self.prompt[:30]}..."

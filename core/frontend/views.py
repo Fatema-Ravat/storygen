@@ -16,6 +16,9 @@ def revise_story(request,story_id):
 def list_revisions(request,story_id):
     return render(request,'revisions.html',{'story_id':story_id})
 
+def illustrate_story(request,story_id):
+    return render(request,'illustrate.html',{'story_id':story_id})
+
 def home(request):
     return render(request,'home.html')
 

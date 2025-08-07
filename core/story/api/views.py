@@ -1,16 +1,28 @@
 """Views for story APIs"""
+import os
+from django.conf import settings
+from django.core.files import File
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import permissions
 
-from story.models import Story,StoryRevision
-from .serializers import StoryRequestSerializer,StoryResponseSerializer,StoryRevisionSerializer,StoryReviseRequestSerializer,ApplyRevisionResponseSerializer
-from story.utils.generator import generate_story_with_huggingface,generate_revise_story_with_huggingface
+from story.models import Story,StoryRevision,StoryImage
+from .serializers import (StoryRequestSerializer,StoryResponseSerializer,
+                        StoryRevisionSerializer,StoryReviseRequestSerializer,
+                        ApplyRevisionResponseSerializer,StoryImageResponseSerializer)
+
+from story.utils.generator import (generate_story_with_huggingface,
+                                   generate_revise_story_with_huggingface,
+                                   generate_image_prompts_from_story)
+from story.utils.image_generation import generate_image_from_prompt
 
 from django.shortcuts import get_object_or_404
 
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema,OpenApiParameter
+
+
 
 @extend_schema(
     request=StoryRequestSerializer,
@@ -130,3 +142,36 @@ class ApplyStoryRevisionView(APIView):
                         "content" : revision_obj.story.content,
                     }
         },status=status.HTTP_200_OK)
+
+@extend_schema(
+    parameters=[OpenApiParameter(name='style',required=False,type=str)],
+    responses=StoryImageResponseSerializer    
+)
+class StoryIllustrationView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, story_id):
+        story = Story.objects.filter(id=story_id, user=request.user).first()
+        if not story:
+            return Response({"error": "Story not found"}, status=404)
+
+        style = request.data.get("style", "default")  # cartoon, realistic, etc.
+        prompts = generate_image_prompts_from_story(story.content)
+
+        saved_images = []
+        for prompt in prompts:
+            image_path = generate_image_from_prompt(prompt, style)
+            if image_path:
+                abs_path = os.path.join(settings.MEDIA_ROOT,image_path)
+
+                with open(abs_path,'rb') as f:
+                    image_obj = StoryImage.objects.create(
+                        story=story,
+                        prompt=prompt,
+                        style=style                        
+                    )
+                    image_obj.image.save(os.path.basename(image_path),File(f),save=True)
+                    saved_images.append(image_obj)
+
+        serializer = StoryImageResponseSerializer(saved_images,many=True)
+        return Response(serializer.data)

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Story Illustrations{% endblock %}
+{% block content %}
+    <div class="max-w-2xl mx-auto bg-white p-6 rounded shadow">
+        <form id="illustrate-form" class="space-y-4">
+        <label for="style" class="block text-sm font-medium">Choose Image Style:</label>
+        <select id="style" name="style" class="w-full p-2 border rounded">
+            <option value="default">Default</option>
+            <option value="storybook">Storybook</option>
+            <option value="cartoon">Cartoon</option>
+            <option value="realistic">Realistic</option>
+            <option value="fantasy">Fantasy</option>
+            <option value="watercolor">Watercolor</option>
+        </select>
+        <button type="submit" class="bg-purple-600 text-white px-4 py-2 rounded">🎨 Generate Illustrations</button>
+        </form>
+
+        <div id="illustrations" class="mt-6 space-y-6"></div>
+    </div>
+
+    <script>
+    document.getElementById("illustrate-form").onsubmit = async function (e) {
+    e.preventDefault();
+    const token = localStorage.getItem("access_token");
+    const style = document.getElementById("style").value;
+
+    const response = await fetch(`/api/story/{{ story_id }}/illustrate/`, {
+        method: "POST",
+        headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ style: style })
+    });
+
+    const data = await response.json();
+    const container = document.getElementById("illustrations");
+    container.innerHTML = "";
+    data.story_images.forEach(item => {
+        const html = `
+        <div class="bg-white p-4 rounded shadow">
+            <p class="text-gray-700 text-sm mb-2">${item.prompt}</p>
+            <img src="${item.image_url}" class="rounded shadow" />
+        </div>
+        `;
+        container.innerHTML += html;
+    });
+    };
+    </script>
+{% endblock %}

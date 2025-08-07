@@ -1,7 +1,8 @@
 """ API urls """
 from django.urls import path
 from .views import (StoryGeneratorView,StoryReviseView,
-                    ApplyStoryRevisionView,StoryDetailView,StoryListView)
+                    ApplyStoryRevisionView,StoryDetailView,StoryListView,
+                    StoryIllustrationView)
 
 urlpatterns = [
     path('generate/', StoryGeneratorView.as_view(), name='generate_story'),
@@ -9,4 +10,5 @@ urlpatterns = [
     path('story/<int:id>/', StoryDetailView.as_view(), name='detail_story'),
     path('story/<int:id>/revise/',StoryReviseView.as_view(),name='revise_story'),
     path('revisions/<int:revision_id>/apply/',ApplyStoryRevisionView.as_view(),name='apply_revision'),
+    path('api/story/<int:story_id>/illustrate/', StoryIllustrationView.as_view(), name='illustrate-story'),
 ]
