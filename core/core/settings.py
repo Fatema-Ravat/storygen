@@ -134,7 +134,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Get API key
 load_dotenv()
 OPENAI_API_KEY=os.getenv('OPENAI_API_KEY')
-HUGGINGFACE_API_KEY = os.getenv('HUGGINGFACE_API_KEY')
+HUGGINGFACE_API_KEY = [os.getenv('HUGGINGFACE_API_KEY')] #using list if we want multiple keys in future.
 
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
@@ -161,3 +161,8 @@ SIMPLE_JWT = {
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+#redis
+
+REDIS_HOST = "localhost"
+REDIS_PORT= 6379

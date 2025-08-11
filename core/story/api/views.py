@@ -22,6 +22,7 @@ from django.shortcuts import get_object_or_404
 
 from drf_spectacular.utils import extend_schema,OpenApiParameter
 
+from story.utils.misc import can_user_generate
 
 
 @extend_schema(
@@ -39,14 +40,24 @@ class StoryGeneratorView(APIView):
             characters = serializer.validated_data['characters']
             moral = serializer.validated_data['moral']
 
-            print("Making call now...")
-            story_text = generate_story_with_huggingface(theme,characters,moral)
+            try:
+                #checking the daily call limit for user
+                user_id = request.user.id
+                if not can_user_generate(user_id,daily_limit=3):
+                    return Response({"error":"Daily Story Generate/Revise limit reached"}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+            except Exception as e:
+                print(e) #to handle redis exception for now.
 
-            story_obj = Story.objects.create(theme=theme,characters=characters,
-                                             moral=moral,content=story_text,user=request.user)
-            response_serializer = StoryResponseSerializer(story_obj)
-            return Response(response_serializer.data)
-        
+            print("Making call now...")
+            try:
+                story_text = generate_story_with_huggingface(theme,characters,moral)
+                story_obj = Story.objects.create(theme=theme,characters=characters,
+                                                moral=moral,content=story_text,user=request.user)
+                response_serializer = StoryResponseSerializer(story_obj)
+                return Response(response_serializer.data)
+            except Exception as e:
+                return Response({"error":str(e)},status=e.status)
+
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
 @extend_schema(
@@ -74,9 +85,7 @@ class StoryListView(APIView):
 
     def get(self,request):
         """ Get the list of all the stories by an user. """
-        print("in get request")
         stories = Story.objects.filter(user=request.user).order_by('-created_at')
-        print(stories)
         response_serializer = StoryResponseSerializer(stories, many=True)
         return Response(response_serializer.data)
     
@@ -104,12 +113,19 @@ class StoryReviseView(APIView):
             instruction = serializer.validated_data['instruction']
 
             print("Making revise call now...")
-            revise_story_text = generate_revise_story_with_huggingface(original_story,instruction)
 
-            revise_story_obj = StoryRevision.objects.create(story=story_obj,instruction=instruction,
-                                                            revised_content = revise_story_text)
-            response_serializer = StoryRevisionSerializer(revise_story_obj)
-            return Response(response_serializer.data)
+            try:
+                revise_story_text = generate_revise_story_with_huggingface(original_story,instruction)
+
+                revise_story_obj = StoryRevision.objects.create(story=story_obj,instruction=instruction,
+                                                                revised_content = revise_story_text)
+                response_serializer = StoryRevisionSerializer(revise_story_obj)
+                return Response(response_serializer.data)
+            except Exception as e:
+                return Response({"error":str(e)},status=e.status)
+
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+            
 
 @extend_schema(
     request=None,
@@ -160,18 +176,22 @@ class StoryIllustrationView(APIView):
 
         saved_images = []
         for prompt in prompts:
-            image_path = generate_image_from_prompt(prompt, style)
-            if image_path:
-                abs_path = os.path.join(settings.MEDIA_ROOT,image_path)
+            try:
+                image_path = generate_image_from_prompt(prompt, style)
+                if image_path:
+                    abs_path = os.path.join(settings.MEDIA_ROOT,image_path)
 
-                with open(abs_path,'rb') as f:
-                    image_obj = StoryImage.objects.create(
-                        story=story,
-                        prompt=prompt,
-                        style=style                        
-                    )
-                    image_obj.image.save(os.path.basename(image_path),File(f),save=True)
-                    saved_images.append(image_obj)
+                    with open(abs_path,'rb') as f:
+                        image_obj = StoryImage.objects.create(
+                            story=story,
+                            prompt=prompt,
+                            style=style                        
+                        )
+                        image_obj.image.save(os.path.basename(image_path),File(f),save=True)
+                        saved_images.append(image_obj)
+            except Exception as e:
+                print("Image for prompt " + prompt + "gave errors: " + str(e))
+                continue
 
         serializer = StoryImageResponseSerializer(saved_images,many=True)
         return Response(serializer.data)

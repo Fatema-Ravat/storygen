@@ -40,3 +40,4 @@ class StoryImage(models.Model):
 
     def __str__(self):
         return f"Image for Story #{self.story.id} – {self.prompt[:30]}..."
+
