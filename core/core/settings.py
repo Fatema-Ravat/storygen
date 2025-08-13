@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'story',
     'frontend',
+    'worksheet_generator',
 ]
 
 MIDDLEWARE = [
