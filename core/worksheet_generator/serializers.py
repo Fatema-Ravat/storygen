@@ -5,7 +5,7 @@ class WorksheetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Worksheet
         fields = "__all__"
-        read_only_fields = ("user","pdf_file","created_at")
+        read_only_fields = ("pdf_file","created_at",)
 
 class WorksheetImageSerializer(serializers.ModelSerializer):
     class Meta:
