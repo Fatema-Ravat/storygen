@@ -10,7 +10,8 @@
         <a href="/" class="text-xl font-bold text-indigo-600">TinyBuilds</a>
         <div>
             <a href="/mystories/" id="mystories-link" class="mx-2 text-indigo-500 hover:underline hidden">My Stories</a>
-            <a href="/generate/" id="generate-link" class="mx-2 text-indigo-500 hover:underline hidden">Generate</a>
+            <a href="/generate/" id="generate-link" class="mx-2 text-indigo-500 hover:underline hidden">Generate Story</a>
+            <a href="/worksheet_generate/" id="worksheet-generate-link" class="mx-2 text-indigo-500 hover:underline hidden">Generate Worksheet</a>
             <a href="/login/" id= "login-link" class="mx-2 text-indigo-500 hover:underline">Login</a>
             <button id="logout-btn" class="text-red-500 hover:underline hidden">Logout</button>
         </div>
@@ -25,11 +26,13 @@
             const logoutBtn = document.getElementById("logout-btn");
             const loginLink = document.getElementById("login-link");
             const generateLink = document.getElementById("generate-link");
+            const worksheetgenerateLink = document.getElementById("worksheet-generate-link");
             const mystoriesLink = document.getElementById("mystories-link");
 
             if (token) {
                 logoutBtn.classList.remove("hidden");
                 generateLink.classList.remove("hidden");
+                worksheetgenerateLink.classList.remove("hidden");
                 mystoriesLink.classList.remove("hidden");
                 loginLink.classList.add("hidden");
                 

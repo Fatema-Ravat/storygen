@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}My Stories{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto bg-white p-6 rounded shadow">
+    <h2 class="text-xl font-semibold mb-4">My Stories</h2>
+    <ul id="worksheet-list" class="space-y-4"></ul>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", async function(){
+
+    const token = localStorage.getItem("access_token");
+    const res = await fetch("/api/worksheet/", {
+        headers: { "Authorization": `Bearer ${token}` }
+    });
+    const worksheets = await res.json();
+    const container = document.getElementById("worksheet-list");
+
+    if (worksheets.length === 0) {
+        container.innerHTML = "<li>No Worksheet found.</li>";
+        return;
+    }
+
+    worksheets.forEach(worksheet => {
+        const item = document.createElement("li");
+        item.classList.add("bg-gray-100", "p-4", "rounded");
+        item.innerHTML = `
+            <h3 class="text-lg font-bold">${worksheet.title}</h3>
+            <p><strong>Subject:</strong> ${worksheet.subject}</p>
+            <p><strong>Grade:</strong> ${worksheet.grade}</p>
+            <a href="/api/worksheet/${worksheet.id}/" class="text-indigo-600 hover:underline">Detail</a> |
+            <button onclick="deleteWorksheet(${worksheet.id })" class="bg-red-500 text-white px-3 py-1 rounded">Delete</button>
+        `;
+        container.appendChild(item);
+    });
+});
+
+function deleteWorksheet(id) {
+    if (!confirm("Delete this worksheet?")) return;
+    
+    fetch(`/api/worksheet/${id}/delete/`, {
+         headers: { "Authorization": `Bearer ${token}` }
+        })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById(`row-${id}`).remove();
+        } else {
+            alert("Failed to delete");
+        }
+    });
+}
+</script>
+{% endblock %}

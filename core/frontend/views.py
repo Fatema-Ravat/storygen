@@ -27,3 +27,12 @@ def register(request):
 
 def mystories(request):
     return render(request,'mystories.html')
+
+def detail_worksheet(request,worksheet_id):
+    return render(request,'detail_worksheet.html',{'worksheet_id':worksheet_id})
+
+def generate_worksheet(request):
+    return render(request,'generate_worksheet.html')
+
+def list_worksheet(request):
+    return render(request,'list_worksheet.html')

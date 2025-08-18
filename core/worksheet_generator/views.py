@@ -33,8 +33,8 @@ class WorksheetGeneratorView(viewsets.ModelViewSet):
     @action(detail=False, methods=["post"])
     def generate(self, request):
         
-
         serializer = self.get_serializer(data=request.data)
+        print(serializer.initial_data, serializer.is_valid(),serializer.errors)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
@@ -43,7 +43,7 @@ class WorksheetGeneratorView(viewsets.ModelViewSet):
             subject=data.get("subject"),
             grade=data.get("grade"),
             worksheet_type=data.get("worksheet_type"),
-            topic=data.get("topic"),
+            topic=data.get("title"),
             num_questions=data.get("num_questions", 10)
         )
         if ai_result.get("error"):
