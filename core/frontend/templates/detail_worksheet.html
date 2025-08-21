@@ -1,28 +1,119 @@
 {% extends "base.html" %}
-{% block title %}Worksheet Details{% endblock %}
 {% block content %}
-<div class="max-w-2xl mx-auto bg-white p-6 rounded shadow">
-    <h2 class="text-xl font-semibold mb-4">Worksheet</h2>
-    <div id="worksheet-content" class="whitespace-pre-wrap"></div>
-    
-    <div class="mt-6 flex gap-4">
-        <a href="/story/{{ story_id }}/revise/" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">
-            ✏️ Edit Worksheet
-        </a>
-    </div>
+<div class="max-w-4xl mx-auto mt-10 p-6 bg-white shadow rounded">
+  <h1 class="text-2xl font-bold mb-4">Worksheet Detail</h1>
 
+  <!-- Container for worksheet details -->
+  <div id="worksheet-container" class="space-y-6">
+    <p class="text-gray-500">Loading worksheet...</p>
+  </div>
+  <div class="mt-6 flex gap-4">
+        <button onclick="generatePdf()" class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600">
+            Generate Pdf
+        </button>
+        <button onclick="showAnswers()" class="bg-green-500 text-white px-3 py-1 rounded">Answers</button>
+    </div>
 </div>
 
+
 <script>
-document.addEventListener("DOMContentLoaded", async function() {
+  document.addEventListener("DOMContentLoaded", async function () {
+    // Get worksheet id from URL (e.g. /worksheets/detail/5/)
+    const worksheetId = "{{ worksheet_id }}";  // Pass from Django view context
+
     const token = localStorage.getItem("access_token");
-    const res = await fetch(`/api/worksheet/{{ worksheet_id }}/`, {
+    const res = await fetch(`/api/worksheet/${worksheetId}/`, {
         headers: {
             "Authorization": `Bearer ${token}`
         }
     });
     const data = await res.json();
-    document.getElementById("worksheet-content").innerText = data.content || "No content found.";
+
+    const container = document.getElementById("worksheet-container");
+    container.innerHTML = ""; // clear loading msg
+
+    // Header info
+    const header = document.createElement("div");
+    header.innerHTML = `
+    <h2 class="text-xl font-semibold">${data.subject} - ${data.title}</h2>
+    <p class="text-gray-600">Grade: ${data.grade}</p>
+    <p class="text-gray-600">Type: ${data.worksheet_type}</p>
+    `;
+    container.appendChild(header);
+
+    // Try parsing content JSON
+    let content = data.content
+
+    // Questions
+    const qDiv = document.createElement("div");
+    qDiv.innerHTML = `<h3 class="text-lg font-bold mt-6 mb-2">Questions</h3>`;
+    if (content.questions && content.questions.length > 0) {
+        const qList = document.createElement("ol");
+        qList.className = "list-decimal pl-6 space-y-2";
+        content.questions.forEach((q, i) => {
+        let li = document.createElement("li");
+        if (typeof q === "string") {
+            li.textContent = q;
+        } else if (q.question) {
+            // support structured MCQ JSON
+            li.innerHTML = `<span class="font-medium">${q.question}</span>`;
+            if (q.options) {
+                let optList = "<ul class='list-disc pl-5 mt-1'>";
+                q.options.forEach(opt => {
+                  optList += `<li>${opt}</li>`;
+                });
+                optList += "</ul>";
+                li.innerHTML += optList;
+            }
+        }
+        qList.appendChild(li);
+        });
+        qDiv.appendChild(qList);
+    } else {
+        qDiv.innerHTML += `<p class="text-gray-500">No questions available</p>`;
+    }
+    container.appendChild(qDiv);
+
+    // Answers
+    const aDiv = document.createElement("div");
+    aDiv.id="answers"; 
+    aDiv.hidden = true;
+    aDiv.innerHTML = `<h3  class="text-lg font-bold mt-6 mb-2" >Answers</h3>`;
+    if (content.answers && content.answers.length > 0) {
+        const aList = document.createElement("ol");
+        aList.className = "list-decimal pl-6 space-y-2";
+        content.answers.forEach(ans => {
+            const li = document.createElement("li");
+            li.textContent = ans.answer;
+            aList.appendChild(li);
+          });
+        aDiv.appendChild(aList);
+    } else {
+        aDiv.innerHTML += `<p class="text-gray-500">No answers available</p>`;
+    }
+    container.appendChild(aDiv);
 });
+
+function showAnswers(){
+    const ansEl = document.getElementById("answers");
+    if (ansEl.hidden){
+        ansEl.hidden=false;
+    }
+    else{
+        ansEl.hidden=true;
+    }
+}
+async function generatePdf(){
+    const worksheetId = "{{ worksheet_id }}";  // Pass from Django view context
+
+    const token = localStorage.getItem("access_token");
+    const res = await fetch(`/api/worksheet/${worksheetId}/generate_pdf`, {
+        headers: {
+            "Authorization": `Bearer ${token}`
+        }
+    });
+}
+
 </script>
 {% endblock %}
+

@@ -90,15 +90,36 @@ def generate_image_prompts_from_story(story_text, num_prompts=3):
     
     
 def generate_worksheet_content(subject, grade, worksheet_type, topic, num_questions=10):
-    prompt = f"""
+    prompt1 = f"""
     You are an educational content generator.
     Generate {num_questions} {worksheet_type} questions for {subject} for Grade {grade}
     on the topic "{topic}". Provide answers separately.
     Format output as JSON with "questions" and "answers".
     """
-
+    # // Blooms Level : e.g., Remember, Understand, Apply, Analyze, Evaluate, Create
+    prompt = f"""
+    You are an educational content generator.  
+    Generate {num_questions} {worksheet_type} questions for {subject}, Grade {grade}, on the topic "{topic}".
+    Each question must be age-appropriate, factually correct, and aligned with the selected Bloom’s Taxonomy level: Understand.    Provide answers separately.  
+    Format the output strictly as JSON following this schema:
+    {
+    "questions": [
+        {
+        "id": 1,
+        "question": "string",
+        "options": ["string", "string", "string", "string"]      
+        }
+    ],
+    "answers": [
+        {
+        "id": 1,
+        "answer": "string"
+        }
+    ]
+    }
+    """
     try:
-        """response = openai.ChatCompletion.create(
+        response = openai.ChatCompletion.create(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are an educational content generator."},
@@ -106,7 +127,7 @@ def generate_worksheet_content(subject, grade, worksheet_type, topic, num_questi
             ],
             temperature=0.7
         )
-        return response.choices[0].message["content"]"""
+        return response.choices[0].message["content"]
         res = call_hugging_face_api(prompt=prompt)
         return res
     except Exception as e:

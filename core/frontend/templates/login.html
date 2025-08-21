@@ -25,7 +25,7 @@ document.getElementById("login-form").onsubmit = async function(e) {
   const data = await res.json();
   if (data.access) {
     localStorage.setItem("access_token", data.access);
-    window.location.href = "/generate/";
+    window.location.href = "/";
   } else {
     document.getElementById("error").innerText = "Login failed";
   }
